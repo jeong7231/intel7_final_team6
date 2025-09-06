@@ -1,6 +1,21 @@
 # aruco_pose_estimation
 
 > 캘리브레이션 정확하게 안된거같음
+
+## 의존성
+```bash
+sudo apt update
+sudo apt install -y \
+    ros-humble-usb-cam \
+    ros-humble-cv-bridge \
+    ros-humble-camera-calibration \
+    ros-humble-rviz2 \
+    ros-humble-tf2-ros \
+    ros-humble-vision-msgs \
+    ros-humble-v4l2-camera
+
+pip install "numpy<2" opencv-contrib-python pyyaml scipy
+```
 >
 
 ## 1. ROS2 워크스페이스 준비
@@ -114,6 +129,9 @@ ros2 run aruco_pose_estimation aruco_pose_tf \
 ```
 
 출력 예시:
+```bash
+ros2 topic echo /tf
+```
 
 ```yaml
 ---
@@ -175,17 +193,6 @@ transforms:
 - RViz2에서 `default_cam` 기준으로 마커 좌표축 확인 가능.
 - 실제 거리와 오차는 캘리브레이션 품질에 따라 달라짐.
 
-## 의존성
-```bash
-sudo apt update
-sudo apt install -y \
-    ros-humble-usb-cam \
-    ros-humble-cv-bridge \
-    ros-humble-camera-calibration \
-    ros-humble-rviz2 \
-    ros-humble-tf2-ros \
-    ros-humble-vision-msgs \
-    ros-humble-v4l2-camera
 
-pip install "numpy<2" opencv-contrib-python pyyaml scipy
-```
+![aruco](image/Screenshot%20from%202025-09-06%2016-27-47.png)
+![aruco2](image/Screenshot%20from%202025-09-06%2016-36-17.png)
