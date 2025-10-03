@@ -28,7 +28,9 @@ class YOLOv8_Detector:
     def __init__(self, model_path, confidence_thres=0.5, iou_thres=0.5):
         self.confidence_thres, self.iou_thres = confidence_thres, iou_thres
         try:
-            self.session = ort.InferenceSession(model_path, providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+            self.session = ort.InferenceSession(model_path, providers=['CUDAExecutionProvider'])
+            #self.session = ort.InferenceSession(model_path, providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+            #self.session = ort.InferenceSession(model_path, providers=[ 'CPUExecutionProvider'])
             print("YOLOv8 ONNX 모델 로드 성공.")
         except Exception as e:
             print(f"오류: YOLOv8 ONNX 모델 로드 실패: {e}"); exit()
@@ -47,7 +49,16 @@ class YOLOv8_Detector:
 
     def detect_objects(self, image):
         input_tensor = self.prepare_input(image)
+
+        # --- ✨ 시간 측정 로직 추가 ✨ ---
+        start_time = time.time()
         outputs = self.session.run(self.output_names, {self.input_names[0]: input_tensor})
+        end_time = time.time()
+        
+        inference_time = (end_time - start_time) * 1000 # 초(s)를 밀리초(ms)로 변환
+        print(f"   ===> Inference Time: {inference_time:.2f} ms")
+        # ------------------------------------
+
         return self.process_output(outputs)
 
     def prepare_input(self, image):
@@ -81,6 +92,30 @@ class YOLOv8_Detector:
         else:
             return [], [], []
 
+def find_box_candidate(image):
+    """ ✨ 새로 추가된 함수 ✨
+    이미지에서 가장 큰 윤곽선(박스)을 찾아 좌표를 반환합니다. """
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    _, thresh = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY_INV)
+    
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+    closed = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+    
+    contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    if not contours:
+        return None
+    
+    # 면적이 가장 큰 윤곽선을 박스로 간주
+    largest_contour = max(contours, key=cv2.contourArea)
+    
+    # 박스가 프레임의 95% 이상을 차지하면 무시 (전체 화면이 잡히는 것 방지)
+    image_area = image.shape[0] * image.shape[1]
+    if cv2.contourArea(largest_contour) > image_area * 0.95:
+        return None
+        
+    return cv2.boundingRect(largest_contour)
 
 # --- 2. OpenCV 후보 탐색 함수들 ---
 def find_invoice_candidates(image):
@@ -94,7 +129,7 @@ def find_invoice_candidates(image):
     contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for c in contours:
         area = cv2.contourArea(c)
-        if area > 4000:
+        if area > 2000:
             peri = cv2.arcLength(c, True)
             approx = cv2.approxPolyDP(c, 0.04 * peri, True)
             if len(approx) == 4:
@@ -153,16 +188,16 @@ if __name__ == '__main__':
     yolo_detector = YOLOv8_Detector(ONNX_MODEL_PATH, CONF_THRESHOLD, IOU_THRESHOLD)
 
     cap = cv2.VideoCapture(CAMERA_INDEX)
-    if not cap.isOpened():
-        print(f"Error: {CAMERA_INDEX} camera not opened"); exit()
+    if not cap.isOpened(): print(f"Error: {CAMERA_INDEX} camera not opened"); exit()
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
     print("Operation Start : press 's' to inference, press 'q' to quit")
     
     last_detection_time = 0
+    last_box_candidate = None
     last_invoice_candidates = []
-    last_sticker_candidates = [] # YOLO 결과 대신 OpenCV 후보를 저장
+    last_sticker_candidates = []
 
     while True:
         ret, frame = cap.read()
@@ -172,12 +207,37 @@ if __name__ == '__main__':
         
         if (current_time - last_detection_time) > DETECTION_INTERVAL:
             last_detection_time = current_time
-            # ✨ 이제 OpenCV가 송장과 스티커 후보를 모두 찾습니다.
-            last_invoice_candidates = find_invoice_candidates(frame)
-            last_sticker_candidates = find_sticker_candidates(frame)
+            
+            # 1. 프레임 전체에서 박스 후보를 먼저 찾습니다.
+            box_rect = find_box_candidate(frame)
+            last_box_candidate = box_rect
+            
+            # 박스를 찾았을 경우에만 내부 탐색
+            if box_rect:
+                x_box, y_box, w_box, h_box = box_rect
+                # 박스 영역만 잘라냅니다 (ROI)
+                box_roi = frame[y_box:y_box+h_box, x_box:x_box+w_box]
+                
+                # 2. 박스 영역 안에서 송장과 스티커를 찾습니다.
+                # 찾은 좌표는 box_roi 기준 상대 좌표입니다.
+                invoice_rects_relative = find_invoice_candidates(box_roi)
+                sticker_rects_relative = find_sticker_candidates(box_roi)
+                
+                # 3. 찾은 좌표를 전체 프레임 기준으로 변환합니다.
+                last_invoice_candidates = [(r[0] + x_box, r[1] + y_box, r[2], r[3]) for r in invoice_rects_relative]
+                last_sticker_candidates = [(s[0] + x_box, s[1] + y_box, s[2], s[3]) for s in sticker_rects_relative]
+            else:
+                # 박스를 못 찾으면 모든 후보를 초기화합니다.
+                last_invoice_candidates = []
+                last_sticker_candidates = []
 
-        # 실시간 디버깅 화면에 후보들을 표시
+        # 실시간 디버깅 화면 표시
         display_frame = frame.copy()
+        if last_box_candidate: # 박스 후보 (흰색)
+            x, y, w, h = last_box_candidate
+            cv2.rectangle(display_frame, (x, y), (x + w, y + h), (255, 255, 255), 3)
+            cv2.putText(display_frame, "Box_ROI", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
+
         for rect in last_invoice_candidates: # 송장 후보 (녹색)
             x, y, w, h = rect
             cv2.rectangle(display_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
@@ -192,10 +252,9 @@ if __name__ == '__main__':
         key = cv2.waitKey(1) & 0xFF
 
         if key == ord('s'):
+            # (이하 's'키를 눌렀을 때의 로직은 변경 없음)
             print("\n--- 's' pressed, start inference ---")
             result_frame = frame.copy()
-
-            # 1. 송장 후보 OCR 실행
             if not last_invoice_candidates: print("Invoice candidate not detected by OpenCV.")
             for rect in last_invoice_candidates:
                 x, y, w, h = rect
@@ -205,34 +264,23 @@ if __name__ == '__main__':
                 cv2.rectangle(result_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 cv2.putText(result_frame, f"OCR: {ocr_text}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
-            # ✨ 2. 스티커 후보 영역을 잘라내어 YOLO로 추론 실행
             if not last_sticker_candidates: print("Sticker candidate not detected by OpenCV.")
             for rect in last_sticker_candidates:
                 x, y, w, h = rect
-                # OpenCV가 찾은 후보 영역을 잘라냄 (ROI)
                 roi = frame[y:y+h, x:x+w]
                 if roi.size == 0: continue
-
-                # 잘라낸 이미지(ROI)로 YOLO 추론 수행
                 boxes, scores, class_ids = yolo_detector.detect_objects(roi)
-                
                 if len(boxes) > 0:
                     print(f"   ...Sticker candidate at ({x}, {y}) -> AI detected {len(boxes)} object(s).")
-                    # ROI 안에서 찾은 결과를 전체 화면 좌표로 변환하여 표시
                     for box, score, class_id in zip(boxes, scores, class_ids):
                         x1_rel, y1_rel, x2_rel, y2_rel = box.astype(int)
-                        
-                        # 전체 프레임 기준 좌표로 변환
-                        x1_abs, y1_abs = x + x1_rel, y + y1_rel
-                        x2_abs, y2_abs = x + x2_rel, y + y2_rel
-                        
+                        x1_abs, y1_abs = x + x_box, y + y_box
+                        x2_abs, y2_abs = x + x_box, y + y_box
                         label = f"{YOLO_CLASS_NAMES[class_id]}: {score:.2f}"
                         cv2.rectangle(result_frame, (x1_abs, y1_abs), (x2_abs, y2_abs), (0, 0, 255), 2)
                         cv2.putText(result_frame, label, (x1_abs, y1_abs - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                 else:
                     print(f"   ...Sticker candidate at ({x}, {y}) -> AI detected nothing.")
-
-
             cv2.imshow("Inference Result", result_frame)
             print("------------------------------------")
 
