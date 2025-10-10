@@ -1,1 +1,0 @@
-/home/team6/intel7_final_team6/turtlebot3_ws/build/turtlebot3_bringup/ament_cmake_core/turtlebot3_bringupConfig-version.cmake

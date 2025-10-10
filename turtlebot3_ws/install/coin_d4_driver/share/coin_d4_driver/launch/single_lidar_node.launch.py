@@ -1,1 +1,0 @@
-/home/team6/intel7_final_team6/turtlebot3_ws/src/coin_d4_driver/launch/single_lidar_node.launch.py

@@ -1,1 +1,0 @@
-/home/team6/intel7_final_team6/turtlebot3_ws/build/coin_d4_driver/ament_cmake_core/coin_d4_driverConfig.cmake

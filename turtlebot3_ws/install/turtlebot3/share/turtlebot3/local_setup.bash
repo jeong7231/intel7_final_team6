@@ -1,1 +1,0 @@
-/home/team6/intel7_final_team6/turtlebot3_ws/build/turtlebot3/ament_cmake_environment_hooks/local_setup.bash

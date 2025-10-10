@@ -1,1 +1,0 @@
-/home/ubuntu123/intel7_final_team6/turtlebot3_ws/src/turtlebot3_dumpbox/launch/placeholder.launch.py

@@ -1,1 +1,0 @@
-/home/team6/intel7_final_team6/turtlebot3_ws/build/ld08_driver/ament_cmake_core/ld08_driverConfig.cmake
