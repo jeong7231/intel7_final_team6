@@ -119,26 +119,77 @@ def find_box_candidate(image):
 
 # --- 2. OpenCV 후보 탐색 함수들 ---
 def find_invoice_candidates(image):
-    """OpenCV로 송장 후보(흰색 사각형)의 '좌표' 리스트를 반환합니다."""
+    """ ✨ 더욱 강력해진 최종 필터링 함수 ✨ """
     candidates = []
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (7, 7), 0)
-    _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
-    closed = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-    contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    threshold_value = 60 
+    _, thresh = cv2.threshold(gray, threshold_value, 255, cv2.THRESH_BINARY_INV)
+    cv2.imshow("Invoice Threshold Debug", thresh)
+    
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # 1. 탐지된 모든 윤곽선을 하나씩 검사합니다.
     for c in contours:
         area = cv2.contourArea(c)
-        if area > 2000:
-            peri = cv2.arcLength(c, True)
-            approx = cv2.approxPolyDP(c, 0.04 * peri, True)
-            if len(approx) == 4:
-                rect = cv2.boundingRect(c)
-                x, y, w, h = rect
-                aspect_ratio = w / float(h) if h > 0 else 0
-                if 1.0 < aspect_ratio < 4.0:
-                    candidates.append(rect)
-    return candidates
+        
+        # 2. 면적 조건을 통과하는지 확인합니다. (최댓값 300000 유지)
+        if 2000 < area < 300000:
+            rect = cv2.boundingRect(c)
+            x, y, w, h = rect
+            aspect_ratio = w / float(h) if h > 0 else 0
+            
+            # 3. 사각형에 가까운 비율인지 확인합니다. (가장 중요한 필터!)
+            # 이 필터가 빛 반사 같은 불규칙한 모양을 걸러줍니다.
+            if 1.0 < aspect_ratio < 5.0:
+                candidates.append(rect)
+    
+    # 4. 조건을 통과한 후보들 중, 가장 면적이 넓은 것을 최종 선택합니다.
+    if candidates:
+        largest_candidate = max(candidates, key=lambda r: r[2] * r[3])
+        return [largest_candidate]
+            
+    return []
+
+### debug find invoice
+#def find_invoice_candidates(image):
+#    """ ✨ 디버깅 기능이 대폭 강화된 함수 ✨ """
+#    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+#    
+#    # 이전에 설정하신 50을 그대로 사용합니다.
+#    threshold_value = 50 
+#    _, thresh = cv2.threshold(gray, threshold_value, 255, cv2.THRESH_BINARY_INV)
+#    cv2.imshow("Invoice Threshold Debug", thresh)
+#    
+#    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#    
+#    # --- ⭐ 디버깅 출력 시작 ⭐ ---
+#    print(f"  [1] Found {len(contours)} contours.")
+#
+#    if not contours:
+#        print("  [Final] No valid invoice candidate found in this frame.")
+#        return []
+#
+#    largest_contour = max(contours, key=cv2.contourArea)
+#    area = cv2.contourArea(largest_contour)
+#    print(f"  [2] Largest contour area: {area:.2f}")
+#
+#    # 크기 필터: 이 범위가 문제일 수 있습니다.
+#    if 2000 < area < 100000:
+#        print("  [3] Area is within the valid range.")
+#        rect = cv2.boundingRect(largest_contour)
+#        x, y, w, h = rect
+#        aspect_ratio = w / float(h) if h > 0 else 0
+#        print(f"  [4] Aspect ratio: {aspect_ratio:.2f}")
+#        
+#        # 비율 필터: 현재 주석 처리된 상태로 둡니다.
+#        # if 1.0 < aspect_ratio < 5.0:
+#        print("  [5] Candidate found! Returning rectangle.")
+#        return [rect]
+#            
+#    print("  [Final] No valid invoice candidate found in this frame.")
+#    return []
+#    # --- ⭐ 디버깅 출력 끝 ⭐ ---
 
 def find_sticker_candidates(image):
     """ ✨ 새로 추가된 함수 ✨
@@ -157,7 +208,14 @@ def find_sticker_candidates(image):
     mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
     mask = cv2.add(mask1, mask2)
     
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # --- ⭐ 추가된 부분 시작 ⭐ ---
+    # 닫힘(Closing) 연산을 위한 커널 생성
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))
+    # 닫힘 연산을 적용하여 끊어진 부분을 이어붙임
+    closed_mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    # --- ⭐ 추가된 부분 끝 ⭐ ---
+
+    contours, _ = cv2.findContours(closed_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
     for c in contours:
         area = cv2.contourArea(c)
@@ -217,7 +275,18 @@ if __name__ == '__main__':
                 x_box, y_box, w_box, h_box = box_rect
                 # 박스 영역만 잘라냅니다 (ROI)
                 box_roi = frame[y_box:y_box+h_box, x_box:x_box+w_box]
-                
+                # 1. 박스 영역 안에서 가능한 모든 송장 후보를 찾습니다.
+                all_invoice_rects = find_invoice_candidates(box_roi)
+                sticker_rects_relative = find_sticker_candidates(box_roi)
+
+                # ✨ 2. 찾은 송장 후보들 중 면적이 가장 큰 것 하나만 선택합니다. ✨
+                if all_invoice_rects:
+                    # 면적(w*h)을 기준으로 가장 큰 사각형을 찾습니다.
+                    largest_invoice_rect = max(all_invoice_rects, key=lambda r: r[2] * r[3])
+                    invoice_rects_relative = [largest_invoice_rect] # 리스트 형태로 저장
+                else:
+                    invoice_rects_relative = []
+
                 # 2. 박스 영역 안에서 송장과 스티커를 찾습니다.
                 # 찾은 좌표는 box_roi 기준 상대 좌표입니다.
                 invoice_rects_relative = find_invoice_candidates(box_roi)
@@ -257,30 +326,45 @@ if __name__ == '__main__':
             result_frame = frame.copy()
             if not last_invoice_candidates: print("Invoice candidate not detected by OpenCV.")
             for rect in last_invoice_candidates:
-                x, y, w, h = rect
-                roi = frame[y:y+h, x:x+w]
-                ocr_text = perform_ocr(roi, OCR_DICTIONARY)
-                print(f"Invoice candidate -> OCR result: {ocr_text}")
-                cv2.rectangle(result_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                cv2.putText(result_frame, f"OCR: {ocr_text}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                if len(rect) == 4:
+                     x, y, w, h = rect
+                     roi = frame[y:y+h, x:x+w]
+                     ocr_text = perform_ocr(roi, OCR_DICTIONARY)
+                     print(f"Invoice candidate -> OCR result: {ocr_text}")
+                     cv2.rectangle(result_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                     cv2.putText(result_frame, f"OCR: {ocr_text}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
             if not last_sticker_candidates: print("Sticker candidate not detected by OpenCV.")
-            for rect in last_sticker_candidates:
-                x, y, w, h = rect
-                roi = frame[y:y+h, x:x+w]
-                if roi.size == 0: continue
-                boxes, scores, class_ids = yolo_detector.detect_objects(roi)
-                if len(boxes) > 0:
-                    print(f"   ...Sticker candidate at ({x}, {y}) -> AI detected {len(boxes)} object(s).")
-                    for box, score, class_id in zip(boxes, scores, class_ids):
-                        x1_rel, y1_rel, x2_rel, y2_rel = box.astype(int)
-                        x1_abs, y1_abs = x + x_box, y + y_box
-                        x2_abs, y2_abs = x + x_box, y + y_box
-                        label = f"{YOLO_CLASS_NAMES[class_id]}: {score:.2f}"
-                        cv2.rectangle(result_frame, (x1_abs, y1_abs), (x2_abs, y2_abs), (0, 0, 255), 2)
-                        cv2.putText(result_frame, label, (x1_abs, y1_abs - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                else:
-                    print(f"   ...Sticker candidate at ({x}, {y}) -> AI detected nothing.")
+            for i, rect in enumerate(last_sticker_candidates):
+                if len(rect) == 4:
+                    x, y, w, h = rect
+                    roi = frame[y:y+h, x:x+w]
+                    if roi.size == 0: continue
+
+                    # 스티커 후보별로 번호를 붙여서 출력
+                    print(f"--- Sticker Candidate #{i+1} at ({x}, {y}) ---")
+
+                    boxes, scores, class_ids = yolo_detector.detect_objects(roi)
+
+                    if len(boxes) > 0:
+                        print(f"   ...Sticker candidate at ({x}, {y}) -> AI detected {len(boxes)} object(s).")
+                        for box, score, class_id in zip(boxes, scores, class_ids):
+                            # --- ⭐ 추가된 부분 시작 ⭐ ---
+                            # 인식된 객체의 클래스 이름과 신뢰도를 터미널에 출력
+                            class_name = YOLO_CLASS_NAMES[class_id]
+                            print(f"   ===> RESULT: Detected '{class_name}' (Confidence: {score:.2f})")
+                            # --- ⭐ 추가된 부분 끝 ⭐ ---
+                            
+                            # (화면에 그리는 부분은 변경 없음)
+                            x1_rel, y1_rel, x2_rel, y2_rel = box.astype(int)
+                            # 버그 수정: x_box, y_box가 아닌 현재 스티커 후보의 x, y를 더해야 함
+                            x1_abs, y1_abs = x + x1_rel, y + y1_rel
+                            x2_abs, y2_abs = x + x2_rel, y + y2_rel
+                            label = f"{class_name}: {score:.2f}"
+                            cv2.rectangle(result_frame, (x1_abs, y1_abs), (x2_abs, y2_abs), (0, 0, 255), 2)
+                            cv2.putText(result_frame, label, (x1_abs, y1_abs - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                    else:
+                        print(f"   ...Sticker candidate at ({x}, {y}) -> AI detected nothing.")
             cv2.imshow("Inference Result", result_frame)
             print("------------------------------------")
 
