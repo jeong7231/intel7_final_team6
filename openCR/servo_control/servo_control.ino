@@ -1,48 +1,47 @@
 #include <TurtleBot3_ROS2.h>
 #include <Servo.h>
 
-Servo s;
+// Dumpbox 서보는 D9 핀에 연결되어 있으며, TurtleBot3 제어 테이블 주소 360을 통해 명령을 받습니다.
+// 이 스케치는 공식 TurtleBot3 펌웨어에 이미 통합된 기능을 간단하게 분리한 버전으로,
+// Nav2/ROS2 노드와의 통신은 Dynamixel 프로토콜(제어 테이블)을 통해 이루어집니다.
+// ASCII 명령을 직접 파싱하던 기존 코드는 TurtleBot3Core::run()과 충돌하므로 제거했습니다.
 
-// 두 상태만 사용
-static const uint16_t POS_CLOSE_US = 1500;   // 닫힘
-static const uint16_t POS_OPEN_US  = 1000;   // 열림
-static const uint32_t CMD_TIMEOUT_MS = 3000; // 신호 없으면 자동 닫힘
+namespace dumpbox
+{
+constexpr uint8_t kServoPin = 9;
+constexpr uint16_t kAddrServoCmd = 360;
+constexpr uint16_t kPulseOpen = 1000;   // OPEN
+constexpr uint16_t kPulseClose = 1500;  // CLOSE
+constexpr uint32_t kTimeoutMs = 3000;   // 명령 타임아웃
+
+static Servo servo;
 static uint32_t last_cmd_ms = 0;
+static uint8_t last_cmd = 0;  // 0: close, 1: open
 
-inline void set_open(bool open){
-  s.writeMicroseconds(open ? POS_OPEN_US : POS_CLOSE_US);
+inline void apply(uint8_t cmd)
+{
+  last_cmd = cmd ? 1 : 0;
+  servo.writeMicroseconds(last_cmd ? kPulseOpen : kPulseClose);
   last_cmd_ms = millis();
 }
 
-void setup() {
-  TurtleBot3Core::begin("Burger");
-
-  s.attach(9);          // OpenCR D9
-  set_open(false);      // 부팅 시 닫힘
-  // Serial은 TB3 코어가 이미 초기화. 별도 baud 설정 불필요.
+inline void ensure_timeout()
+{
+  if ((millis() - last_cmd_ms) > kTimeoutMs) {
+    apply(0);
+  }
+}
 }
 
-void loop() {
+void setup()
+{
+  TurtleBot3Core::begin("Burger");
+  dumpbox::servo.attach(dumpbox::kServoPin);
+  dumpbox::apply(0);
+}
+
+void loop()
+{
   TurtleBot3Core::run();
-
-  // ASCII 명령 수신: "BOX OPEN\n" 또는 "BOX CLOSE\n"
-  static char buf[16]; 
-  static uint8_t idx = 0;
-
-  while (Serial.available()) {
-    char c = Serial.read();
-    if (c == '\n') {
-      buf[idx] = 0; 
-      idx = 0;
-      if (strcmp(buf, "BOX OPEN")  == 0) set_open(true);
-      if (strcmp(buf, "BOX CLOSE") == 0) set_open(false);
-    } else if (idx < sizeof(buf) - 1) {
-      buf[idx++] = c;
-    }
-  }
-
-  // 타임아웃 안전동작
-  if (millis() - last_cmd_ms > CMD_TIMEOUT_MS) {
-    set_open(false);
-  }
+  dumpbox::ensure_timeout();
 }

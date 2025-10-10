@@ -18,6 +18,7 @@ find_package(std_srvs REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(dynamixel_sdk REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 
 add_executable(dumpbox_heartbeat src/common/heartbeat_node.cpp)
@@ -31,6 +32,7 @@ ament_target_dependencies(dumpbox_servo_controller
   rclcpp
   std_msgs
   std_srvs
+  dynamixel_sdk
 )
 
 add_executable(dumpbox_mission_executor src/remote/mission_executor_node.cpp)
