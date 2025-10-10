@@ -1,15 +1,1 @@
-#!/usr/bin/env python3
-
-from launch import LaunchDescription
-from launch_ros.actions import Node
-
-
-def generate_launch_description():
-    return LaunchDescription([
-        Node(
-            package='turtlebot3_dumpbox',
-            executable='dumpbox_heartbeat',
-            name='dumpbox_heartbeat',
-            output='screen'
-        )
-    ])
+/home/ubuntu123/intel7_final_team6/turtlebot3_ws/src/turtlebot3_dumpbox/launch/placeholder.launch.py

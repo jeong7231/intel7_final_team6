@@ -1,2 +1,1 @@
-source;share/turtlebot3_dumpbox/environment/ament_prefix_path.sh
-source;share/turtlebot3_dumpbox/environment/path.sh
+/home/ubuntu123/intel7_final_team6/turtlebot3_ws/build/turtlebot3_dumpbox/ament_cmake_environment_hooks/local_setup.dsv

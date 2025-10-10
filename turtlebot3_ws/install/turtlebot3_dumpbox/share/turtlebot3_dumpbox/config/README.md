@@ -1,3 +1,1 @@
-# turtlebot3_dumpbox config
-
-This directory stores configuration files for the TurtleBot3 dumpbox project.
+/home/ubuntu123/intel7_final_team6/turtlebot3_ws/src/turtlebot3_dumpbox/config/README.md
