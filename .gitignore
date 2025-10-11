@@ -481,3 +481,11 @@ CMakeCache.txt
 CMakeFiles/
 cmake-build-*/
 
+
+# ROS 2 colcon build outputs
+/turtlebot3_ws/build/
+/turtlebot3_ws/install/
+/turtlebot3_ws/log/
+/ros2_ws/build/
+/ros2_ws/install/
+/ros2_ws/log/
