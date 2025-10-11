@@ -120,7 +120,7 @@ static void update_motor_status(uint32_t interval_ms);
 static void update_battery_status(uint32_t interval_ms);
 static void update_analog_sensors(uint32_t interval_ms);
 static void update_joint_status(uint32_t interval_ms);
-
+static void update_dumpbox_servo(uint32_t interval_ms);
 
 DYNAMIXEL::USBSerialPortHandler port_dxl_slave(SERIAL_DXL_SLAVE);
 DYNAMIXEL::Slave dxl_slave(port_dxl_slave, MODEL_NUM_DXL_SLAVE);
@@ -149,7 +149,7 @@ enum ControlTableItemAddr{
 
   ADDR_ILLUMINATION    = 30,
   ADDR_IR              = 34,
-  ADDR_SORNA           = 38,
+  ADDR_SONAR           = 38,
 
   ADDR_BATTERY_VOLTAGE = 42,
   ADDR_BATTERY_PERCENT = 46,
@@ -245,8 +245,8 @@ enum ControlTableItemAddr{
   ADDR_GOAL_CURRENT_WR_GRIPPER  = 343,
   ADDR_GOAL_CURRENT_RD          = 344,
 
+  /* Servo command address */
   ADDR_DUMPBOX_SERVO_CMD        = 360,
-
 };
 
 typedef struct ControlItemVariables{
@@ -268,7 +268,7 @@ typedef struct ControlItemVariables{
 
   uint16_t illumination;
   uint32_t ir_sensor;
-  float sornar;
+  float sonar;
 
   uint32_t bat_voltage_x100;
   uint32_t bat_percent_x100;
@@ -291,13 +291,13 @@ typedef struct ControlItemVariables{
   uint32_t profile_acceleration[MortorLocation::MOTOR_NUM_MAX];
 
   bool joint_torque_enable_state;
-  joint_position_info_t joint_goal_position;  
-  joint_position_info_t joint_present_position;
-  joint_velocity_info_t joint_present_velocity;
-  joint_current_info_t joint_present_current;
-  joint_accel_info_t joint_profile_acc;
-  joint_accel_info_t joint_profile_vel;
-  joint_current_info_t joint_goal_current;
+  joint_position_info_t  joint_goal_position;  
+  joint_position_info_t  joint_present_position;
+  joint_velocity_info_t  joint_present_velocity;
+  joint_current_info_t   joint_present_current;
+  joint_accel_info_t     joint_profile_acc;
+  joint_accel_info_t     joint_profile_vel;   // 타입 복원
+  joint_current_info_t   joint_goal_current;
 
   bool joint_goal_position_wr_joint;
   bool joint_goal_position_wr_gripper;
@@ -314,11 +314,15 @@ typedef struct ControlItemVariables{
   bool joint_goal_current_wr_joint;
   bool joint_goal_current_wr_gripper;
   bool joint_goal_current_rd;
+
+  /* Servo command field */
   uint8_t dumpbox_servo_cmd;
+} ControlItemVariables;
 
-}ControlItemVariables;
-
+/* control_items를 Servo 헬퍼보다 먼저 선언 */
 static ControlItemVariables control_items;
+
+/* Servo globals */
 static Servo dumpbox_servo;
 static uint32_t dumpbox_servo_last_cmd_ms = 0;
 static const uint16_t DUMPBOX_SERVO_OPEN_US  = 1000;
@@ -336,8 +340,6 @@ static inline void dumpbox_servo_apply_command()
 {
   dumpbox_servo_set(control_items.dumpbox_servo_cmd != 0);
 }
-
-static void update_dumpbox_servo(uint32_t interval_ms);
 
 
 /*******************************************************************************
@@ -396,7 +398,7 @@ void TurtleBot3Core::begin(const char* model_name)
 
   control_items.debug_mode = false;
   control_items.is_connect_ros2_node = false;
-  control_items.is_connect_manipulator = false;  
+  control_items.is_connect_manipulator = false;
   control_items.dumpbox_servo_cmd = 0;
 
   // Port begin
@@ -436,7 +438,7 @@ void TurtleBot3Core::begin(const char* model_name)
   // Items for Analog sensors
   dxl_slave.addControlItem(ADDR_ILLUMINATION, control_items.illumination);
   dxl_slave.addControlItem(ADDR_IR, control_items.ir_sensor);
-  dxl_slave.addControlItem(ADDR_SORNA, control_items.sornar);
+  dxl_slave.addControlItem(ADDR_SONAR, control_items.sonar);
   // Items for Battery
   dxl_slave.addControlItem(ADDR_BATTERY_VOLTAGE, control_items.bat_voltage_x100);
   dxl_slave.addControlItem(ADDR_BATTERY_PERCENT, control_items.bat_percent_x100);
@@ -475,10 +477,6 @@ void TurtleBot3Core::begin(const char* model_name)
   dxl_slave.addControlItem(ADDR_CMD_VEL_ANGULAR_Z, control_items.cmd_vel_angular[2]);  
   dxl_slave.addControlItem(ADDR_PROFILE_ACC_L, control_items.profile_acceleration[MortorLocation::LEFT]);
   dxl_slave.addControlItem(ADDR_PROFILE_ACC_R, control_items.profile_acceleration[MortorLocation::RIGHT]);
-
-  dumpbox_servo.attach(9);
-  dumpbox_servo_set(false);
-  dxl_slave.addControlItem(ADDR_DUMPBOX_SERVO_CMD, control_items.dumpbox_servo_cmd);
 
   if (p_tb3_model_info->has_manipulator == true) {
     control_items.joint_goal_position_wr_joint = false;
@@ -552,6 +550,11 @@ void TurtleBot3Core::begin(const char* model_name)
     dxl_slave.addControlItem(ADDR_GOAL_CURRENT_RD, control_items.joint_goal_current_rd);    
   }
 
+  /* Servo attach and control item */
+  dumpbox_servo.attach(9);
+  dumpbox_servo_set(false);
+  dxl_slave.addControlItem(ADDR_DUMPBOX_SERVO_CMD, control_items.dumpbox_servo_cmd);
+
   // Set user callback function for processing write command from master.
   dxl_slave.setWriteCallbackFunc(dxl_slave_write_callback_func);
 
@@ -601,33 +604,25 @@ void TurtleBot3Core::begin(const char* model_name)
 *******************************************************************************/
 void TurtleBot3Core::run()
 {
-  static uint32_t pre_time_to_control_motor;
+  static uint32_t pre_time_to_control_motor = 0;
 
   // Check connection state with ROS2 node
   update_connection_state_with_ros2_node();
 
   /* For diagnosis */
-  // Show LED status
   diagnosis.showLedStatus(get_connection_state_with_ros2_node());
-  // Update Voltage
   diagnosis.updateVoltageCheck(true);
-  // Check push button pressed for simple test drive
   test_motors_with_buttons(diagnosis.getButtonPress(3000));
 
   /* For sensing and run buzzer */
-  // Update the IMU unit
   sensors.updateIMU();
-  // Update sonar data
   // TODO: sensors.updateSonar(t);
-  // Run buzzer if there is still melody to play.
   sensors.onMelody();
 
   /* For getting command from rc100 */
-  // Receive data from RC100 
   controllers.getRCdata(goal_velocity_from_rc100);
 
   /* For processing DYNAMIXEL slave function */
-  // Update control table of OpenCR to communicate with ROS2 node
   update_imu(INTERVAL_MS_TO_UPDATE_CONTROL_ITEM);
   update_times(INTERVAL_MS_TO_UPDATE_CONTROL_ITEM);
   update_gpios(INTERVAL_MS_TO_UPDATE_CONTROL_ITEM);
@@ -635,6 +630,7 @@ void TurtleBot3Core::run()
   update_battery_status(INTERVAL_MS_TO_UPDATE_CONTROL_ITEM);
   update_analog_sensors(INTERVAL_MS_TO_UPDATE_CONTROL_ITEM);
   update_joint_status(INTERVAL_MS_TO_UPDATE_CONTROL_ITEM);
+  update_dumpbox_servo(INTERVAL_MS_TO_UPDATE_CONTROL_ITEM);
 
   // Packet processing with ROS2 Node.
   dxl_slave.processPacket();
@@ -720,6 +716,8 @@ void update_battery_status(uint32_t interval_ms)
 
     if(bat_voltage >= 3.5*3){
       bat_percent = map_float(bat_voltage, 3.5*3, 4.1*3, 0.0, 100.0);
+      if (bat_percent < 0.0f) bat_percent = 0.0f;
+      if (bat_percent > 100.0f) bat_percent = 100.0f;
       control_items.bat_percent_x100 = (uint32_t)(bat_percent*100);
     }
   }
@@ -734,7 +732,7 @@ void update_analog_sensors(uint32_t interval_ms)
 
     control_items.illumination = (uint16_t)sensors.getIlluminationData();
     control_items.ir_sensor = (uint32_t)sensors.getIRsensorData();
-    control_items.sornar = (float)sensors.getSonarData();
+    control_items.sonar = (float)sensors.getSonarData();
   }
 }
 
@@ -768,10 +766,6 @@ void update_motor_status(uint32_t interval_ms)
   if(millis() - pre_time >= interval_ms){
     pre_time = millis();
 
-
-    uint32_t pre_time_dxl;
-
-    pre_time_dxl = millis();
     if(get_connection_state_with_motors() == true){
       motor_driver.read_present_position(control_items.present_position[MortorLocation::LEFT], control_items.present_position[MortorLocation::RIGHT]);
       motor_driver.read_present_velocity(control_items.present_velocity[MortorLocation::LEFT], control_items.present_velocity[MortorLocation::RIGHT]);
@@ -792,15 +786,30 @@ void update_joint_status(uint32_t interval_ms)
   if(millis() - pre_time >= interval_ms){
     pre_time = millis();
 
-    manipulator_driver.read_present_position(control_items.joint_present_position);
-    manipulator_driver.read_present_velocity(control_items.joint_present_velocity);
-    manipulator_driver.read_present_current(control_items.joint_present_current);
+    if (p_tb3_model_info->has_manipulator == true) {
+      manipulator_driver.read_present_position(control_items.joint_present_position);
+      manipulator_driver.read_present_velocity(control_items.joint_present_velocity);
+      manipulator_driver.read_present_current(control_items.joint_present_current);
 
-    if(get_connection_state_with_joints() == true){
-
-      control_items.joint_torque_enable_state = manipulator_driver.get_torque();
+      if(get_connection_state_with_joints() == true){
+        control_items.joint_torque_enable_state = manipulator_driver.get_torque();
+      }
     }
   }  
+}
+
+static void update_dumpbox_servo(uint32_t interval_ms)
+{
+  static uint32_t pre_time = 0;
+
+  if (millis() - pre_time < interval_ms) {
+    return;
+  }
+  pre_time = millis();
+
+  if ((millis() - dumpbox_servo_last_cmd_ms) > DUMPBOX_SERVO_TIMEOUT_MS) {
+    dumpbox_servo_set(false);
+  }
 }
 
 /*******************************************************************************
@@ -859,7 +868,6 @@ static void dxl_slave_write_callback_func(uint16_t item_addr, uint8_t &dxl_err_c
       break;
 
     // ADDR_GOAL_POSITION
-    //
     case ADDR_GOAL_POSITION_WR_JOINT:
       if (get_connection_state_with_ros2_node() == true && control_items.joint_goal_position_wr_joint == true) {
         manipulator_driver.write_goal_position_joint(control_items.joint_goal_position);
@@ -882,7 +890,6 @@ static void dxl_slave_write_callback_func(uint16_t item_addr, uint8_t &dxl_err_c
       break;
 
     // ADDR_PROFILE_ACC
-    //
     case ADDR_PROFILE_ACC_WR_JOINT:
       if (get_connection_state_with_ros2_node() == true && control_items.joint_profile_acc_wr_joint == true) {
         manipulator_driver.write_profile_acceleration_joint(control_items.joint_profile_acc);
@@ -894,7 +901,7 @@ static void dxl_slave_write_callback_func(uint16_t item_addr, uint8_t &dxl_err_c
       if (get_connection_state_with_ros2_node() == true && control_items.joint_profile_acc_wr_gripper == true) {
         manipulator_driver.write_profile_acceleration_gripper(control_items.joint_profile_acc);
       }
-      control_items.joint_profile_acc_wr_joint = false;
+      control_items.joint_profile_acc_wr_gripper = false;
       break;      
 
     case ADDR_PROFILE_ACC_RD:
@@ -905,7 +912,6 @@ static void dxl_slave_write_callback_func(uint16_t item_addr, uint8_t &dxl_err_c
       break;     
 
     // ADDR_PROFILE_VEL
-    //
     case ADDR_PROFILE_VEL_WR_JOINT:
       if (get_connection_state_with_ros2_node() == true && control_items.joint_profile_vel_wr_joint == true) {
         manipulator_driver.write_profile_velocity_joint(control_items.joint_profile_vel);
@@ -927,8 +933,12 @@ static void dxl_slave_write_callback_func(uint16_t item_addr, uint8_t &dxl_err_c
       control_items.joint_profile_vel_rd = false;
       break;      
 
+    // Servo command
+    case ADDR_DUMPBOX_SERVO_CMD:
+      dumpbox_servo_apply_command();
+      break;
+
     // ADDR_GOAL_CURRENT
-    //
     case ADDR_GOAL_CURRENT_WR_JOINT:
       if (get_connection_state_with_ros2_node() == true && control_items.joint_goal_current_wr_joint == true) {
         manipulator_driver.write_goal_current_joint(control_items.joint_goal_current);
@@ -1083,18 +1093,5 @@ void test_motors_with_buttons(uint8_t buttons)
       goal_velocity_from_button[VelocityType::ANGULAR]  = 0.0;
       move[VelocityType::ANGULAR] = false;
     }
-  }
-}
-
-static void update_dumpbox_servo(uint32_t interval_ms)
-{
-  static uint32_t pre_time = 0;
-  if (millis() - pre_time < interval_ms) {
-    return;
-  }
-  pre_time = millis();
-
-  if ((millis() - dumpbox_servo_last_cmd_ms) > DUMPBOX_SERVO_TIMEOUT_MS) {
-    dumpbox_servo_set(false);
   }
 }
