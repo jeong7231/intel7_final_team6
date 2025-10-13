@@ -1,0 +1,12 @@
+[submodule "turtlebot3_ws/src/turtlebot3"]
+	path = turtlebot3_ws/src/turtlebot3
+	url = https://github.com/ROBOTIS-GIT/turtlebot3.git
+	branch = humble
+[submodule "turtlebot3_ws/src/ld08_driver"]
+	path = turtlebot3_ws/src/ld08_driver
+	url = https://github.com/ROBOTIS-GIT/ld08_driver.git
+	branch = humble
+[submodule "turtlebot3_ws/src/coin_d4_driver"]
+	path = turtlebot3_ws/src/coin_d4_driver
+	url = https://github.com/ROBOTIS-GIT/coin_d4_driver.git
+	branch = humble
