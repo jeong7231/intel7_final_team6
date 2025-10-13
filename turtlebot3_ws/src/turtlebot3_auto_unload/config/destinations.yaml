@@ -1,0 +1,55 @@
+# Default destinations for TurtleBot3 auto unload mission.
+# 좌표는 예시이며 실제 환경에 맞추어 조정하세요.
+
+destinations:
+  "0":
+    marker_id: 0
+    staging_pose:
+      x: 0.8
+      y: -0.4
+      yaw: 1.57
+    drop_pose:
+      x: 1.1
+      y: -0.4
+      yaw: 1.57
+    return_pose:
+      x: -0.2
+      y: 0.0
+      yaw: 3.14
+  "1":
+    marker_id: 1
+    staging_pose:
+      x: 2.0
+      y: 0.6
+      yaw: 0.0
+    drop_pose:
+      x: 2.3
+      y: 0.6
+      yaw: 0.0
+    return_pose:
+      x: 0.0
+      y: 0.0
+      yaw: 0.0
+  "2":
+    marker_id: 2
+    staging_pose:
+      x: -1.5
+      y: 0.8
+      yaw: -1.57
+    drop_pose:
+      x: -1.8
+      y: 0.8
+      yaw: -1.57
+    return_pose:
+      x: -0.3
+      y: -0.2
+      yaw: -1.57
+
+default_home:
+  x: 0.0
+  y: 0.0
+  yaw: 0.0
+
+marker_search:
+  rotation_speed: 0.3
+  max_search_time: 45.0
