@@ -1,6 +1,7 @@
 #include "turtlebot3_aruco/aruco_pose_node.hpp"
 
 #include "rclcpp_components/register_node_macro.hpp"
+#include <chrono>
 #include <cmath>
 #include <stdexcept>
 
@@ -8,6 +9,7 @@
 #include "std_msgs/msg/header.hpp"
 #include "tf2/LinearMath/Matrix3x3.h"
 #include "tf2/LinearMath/Quaternion.h"
+#include "tf2/exceptions.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
 #include <opencv2/calib3d.hpp>
@@ -60,10 +62,13 @@ std::map<std::string, cv::aruco::PREDEFINED_DICTIONARY_NAME> createDictionaryLoo
 }  // namespace
 
 ArucoPoseNode::ArucoPoseNode(const rclcpp::NodeOptions & options)
-: rclcpp::Node("turtlebot3_aruco_tracker", options)
+: rclcpp::Node("turtlebot3_aruco_tracker", options),
+  tf_buffer_(this->get_clock()),
+  tf_listener_(tf_buffer_)
 {
   marker_size_ = this->declare_parameter<double>("marker_size", marker_size_);
   camera_frame_ = this->declare_parameter<std::string>("camera_frame", camera_frame_);
+  base_frame_ = this->declare_parameter<std::string>("base_frame", base_frame_);
   image_topic_ = this->declare_parameter<std::string>("image_topic", image_topic_);
   camera_info_topic_ = this->declare_parameter<std::string>("camera_info_topic", camera_info_topic_);
   publish_debug_image_ = this->declare_parameter<bool>("publish_debug_image", publish_debug_image_);
@@ -86,6 +91,10 @@ ArucoPoseNode::ArucoPoseNode(const rclcpp::NodeOptions & options)
   if (publish_debug_image_) {
     debug_image_pub_ = image_transport::create_publisher(this, "aruco/detection_image");
   }
+
+  distance_timer_ = this->create_wall_timer(
+    std::chrono::milliseconds(200),
+    std::bind(&ArucoPoseNode::computeRelativeDistances, this));
 
   RCLCPP_INFO(this->get_logger(), "ArucoPoseNode ready (dict: %s, marker_size: %.3f m)",
     dictionary_name.c_str(), marker_size_);
@@ -148,8 +157,12 @@ void ArucoPoseNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr 
   cv::aruco::detectMarkers(gray, dictionary_, marker_corners, marker_ids, detector_params_);
 
   if (marker_ids.empty()) {
+    tracked_marker_ids_.clear();
     return;
   }
+
+  tracked_marker_ids_.clear();
+  tracked_marker_ids_.insert(marker_ids.begin(), marker_ids.end());
 
   cv::Mat rvecs;
   cv::Mat tvecs;
@@ -193,7 +206,7 @@ void ArucoPoseNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr 
 
     broadcastMarkerTransform(transform);
 
-    RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), kWarnThrottleMs,
+    RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
       "Tracked marker %d", marker_ids[i]);
   }
 
@@ -211,6 +224,37 @@ void ArucoPoseNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr 
   }
 }
 
+void ArucoPoseNode::computeRelativeDistances()
+{
+  if (tracked_marker_ids_.empty()) {
+    return;
+  }
+
+  for (int marker_id : tracked_marker_ids_) {
+    const std::string marker_frame = "ar_marker_" + std::to_string(marker_id);
+    geometry_msgs::msg::TransformStamped transform;
+    try {
+      transform = tf_buffer_.lookupTransform(base_frame_, marker_frame, tf2::TimePointZero);
+    } catch (const tf2::TransformException & ex) {
+      RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000,
+        "TF lookup failed (%s -> %s): %s", base_frame_.c_str(), marker_frame.c_str(), ex.what());
+      continue;
+    }
+
+    const auto & trans = transform.transform.translation;
+    const double dx = trans.x;
+    const double dy = trans.y;
+    const double dz = trans.z;
+    const double distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+    const double planar = std::sqrt(dx * dx + dy * dy);
+    const double yaw = std::atan2(dy, dx);
+
+    RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+      "Marker %d | dist %.3f m (planar %.3f m, yaw %.1f deg, z %.3f m)",
+      marker_id, distance, planar, yaw * 180.0 / M_PI, dz);
+  }
+}
+
 void ArucoPoseNode::broadcastMarkerTransform(
   const geometry_msgs::msg::TransformStamped & transform) const
 {
@@ -220,4 +264,3 @@ void ArucoPoseNode::broadcastMarkerTransform(
 }  // namespace turtlebot3_aruco
 
 RCLCPP_COMPONENTS_REGISTER_NODE(turtlebot3_aruco::ArucoPoseNode)
-
