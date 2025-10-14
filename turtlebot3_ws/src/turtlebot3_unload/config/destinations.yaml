@@ -1,0 +1,48 @@
+# TurtleBot3 unload mission destination configuration
+# 모든 좌표는 map 프레임 기준 절대 좌표입니다.
+
+destinations:
+  "0":
+    marker_id: 0
+    staging_pose:
+      x: 1.678
+      y: 0.106
+      yaw: -0.014
+    return_pose:
+      x: -0.052
+      y: 0.032
+      yaw: 0.053
+  "1":
+    marker_id: 1
+    staging_pose:
+      x: 1.678
+      y: 0.106
+      yaw: -0.014
+    return_pose:
+      x: -0.052
+      y: 0.032
+      yaw: 0.053
+  "2":
+    marker_id: 2
+    staging_pose:
+      x: 1.678
+      y: 0.106
+      yaw: -0.014
+    return_pose:
+      x: -0.052
+      y: 0.032
+      yaw: 0.053
+
+default_home:
+  x: -0.052
+  y: 0.032
+  yaw: 0.053
+
+marker_search:
+  rotation_speed: 0.3   # rad/s
+  max_search_time: 45.0 # seconds
+
+unload:
+  servo_pwm_open: 1000.0
+  servo_pwm_close: 1500.0
+  servo_hold_time: 3.0
