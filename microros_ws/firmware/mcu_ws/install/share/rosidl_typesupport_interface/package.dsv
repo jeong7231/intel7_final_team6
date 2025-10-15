@@ -1,0 +1,3 @@
+source;share/rosidl_typesupport_interface/hook/pythonpath.ps1
+source;share/rosidl_typesupport_interface/hook/pythonpath.dsv
+source;share/rosidl_typesupport_interface/hook/pythonpath.sh
