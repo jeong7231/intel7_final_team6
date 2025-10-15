@@ -3,44 +3,37 @@
 
 destinations:
   "0":
-    marker_id: 0
-    staging_pose:
-      x: 1.678
-      y: 0.106
-      yaw: -0.014
+    drop_pose:
+      x: 2.163
+      y: 0.074
+      yaw: -0.343
     return_pose:
-      x: -0.052
-      y: 0.032
-      yaw: 0.053
+      x: -0.027
+      y: 0.006
+      yaw: 0.011
   "1":
-    marker_id: 1
-    staging_pose:
-      x: 1.678
-      y: 0.106
-      yaw: -0.014
+    drop_pose:
+      x: 2.163
+      y: 0.074
+      yaw: -0.343
     return_pose:
-      x: -0.052
-      y: 0.032
-      yaw: 0.053
+      x: -0.027
+      y: 0.006
+      yaw: 0.011
   "2":
-    marker_id: 2
-    staging_pose:
-      x: 1.678
-      y: 0.106
-      yaw: -0.014
+    drop_pose:
+      x: 2.163
+      y: 0.074
+      yaw: -0.343
     return_pose:
-      x: -0.052
-      y: 0.032
-      yaw: 0.053
+      x: -0.027
+      y: 0.006
+      yaw: 0.011
 
 default_home:
-  x: -0.052
-  y: 0.032
-  yaw: 0.053
-
-marker_search:
-  rotation_speed: 0.3   # rad/s
-  max_search_time: 45.0 # seconds
+  x: -0.027
+  y: 0.006
+  yaw: 0.011
 
 unload:
   servo_pwm_open: 1000.0
