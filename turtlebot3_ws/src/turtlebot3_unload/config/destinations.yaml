@@ -1,0 +1,41 @@
+# TurtleBot3 unload mission destination configuration
+# 모든 좌표는 map 프레임 기준 절대 좌표입니다.
+
+destinations:
+  "0":
+    drop_pose:
+      x: 2.163
+      y: 0.074
+      yaw: -0.343
+    return_pose:
+      x: -0.027
+      y: 0.006
+      yaw: 0.011
+  "1":
+    drop_pose:
+      x: 2.163
+      y: 0.074
+      yaw: -0.343
+    return_pose:
+      x: -0.027
+      y: 0.006
+      yaw: 0.011
+  "2":
+    drop_pose:
+      x: 2.163
+      y: 0.074
+      yaw: -0.343
+    return_pose:
+      x: -0.027
+      y: 0.006
+      yaw: 0.011
+
+default_home:
+  x: -0.027
+  y: 0.006
+  yaw: 0.011
+
+unload:
+  servo_pwm_open: 1000.0
+  servo_pwm_close: 1500.0
+  servo_hold_time: 3.0
