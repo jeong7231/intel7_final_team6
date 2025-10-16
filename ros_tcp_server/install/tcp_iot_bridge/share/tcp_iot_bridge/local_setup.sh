@@ -1,0 +1,1 @@
+/home/ubuntu/ros2_ws/build/tcp_iot_bridge/ament_cmake_environment_hooks/local_setup.sh

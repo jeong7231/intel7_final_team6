@@ -1,0 +1,1 @@
+/home/ubuntu/ros2_ws/build/iot_bridge_interfaces/ament_cmake_core/iot_bridge_interfacesConfig-version.cmake
