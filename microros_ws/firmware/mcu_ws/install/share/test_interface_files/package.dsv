@@ -1,0 +1,3 @@
+source;share/test_interface_files/hook/pythonpath.ps1
+source;share/test_interface_files/hook/pythonpath.dsv
+source;share/test_interface_files/hook/pythonpath.sh

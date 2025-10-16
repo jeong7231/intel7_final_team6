@@ -489,3 +489,15 @@ cmake-build-*/
 /ros2_ws/build/
 /ros2_ws/install/
 /ros2_ws/log/
+# micro-ROS generated workspaces and vendors
+/microros_ws/build/
+/microros_ws/install/
+/microros_ws/log/
+/microros_ws/firmware/build/
+/microros_ws/firmware/dev_ws/
+/microros_ws/firmware/mcu_ws/
+/microros_ws/firmware/log/
+/microros_ws/firmware/COLCON_IGNORE
+/microros_ws/firmware/PLATFORM
+/microros_ws/src/micro_ros_agent/
+/microros_ws/src/micro_ros_setup/

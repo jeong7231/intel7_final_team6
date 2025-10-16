@@ -1,0 +1,3 @@
+source;share/rcutils/hook/pythonpath.ps1
+source;share/rcutils/hook/pythonpath.dsv
+source;share/rcutils/hook/pythonpath.sh
