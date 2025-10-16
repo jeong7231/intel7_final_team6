@@ -1,0 +1,3 @@
+source install/setup.bash
+
+ros2 run tcp_iot_bridge tcp_bridge_node --ros-args -p port:=9190 --low-level debug

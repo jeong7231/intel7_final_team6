@@ -1,0 +1,1 @@
+/home/ubuntu/ros2_ws/src/iot_bridge_interfaces/msg/IotMessage.msg
