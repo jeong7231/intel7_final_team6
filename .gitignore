@@ -501,3 +501,6 @@ cmake-build-*/
 /microros_ws/firmware/PLATFORM
 /microros_ws/src/micro_ros_agent/
 /microros_ws/src/micro_ros_setup/
+
+# 압축파일 추적 X
+*.zip

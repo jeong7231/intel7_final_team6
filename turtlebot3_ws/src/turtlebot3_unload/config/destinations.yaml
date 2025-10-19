@@ -1,41 +1,20 @@
-# TurtleBot3 unload mission destination configuration
-# 모든 좌표는 map 프레임 기준 절대 좌표입니다.
-
 destinations:
-  "0":
-    drop_pose:
-      x: 2.163
-      y: 0.074
-      yaw: -0.343
-    return_pose:
-      x: -0.027
-      y: 0.006
-      yaw: 0.011
   "1":
-    drop_pose:
-      x: 2.163
-      y: 0.074
-      yaw: -0.343
-    return_pose:
-      x: -0.027
-      y: 0.006
-      yaw: 0.011
+    drop_pose:  {x: 1.981, y: -0.017, yaw: -2.984}
   "2":
-    drop_pose:
-      x: 2.163
-      y: 0.074
-      yaw: -0.343
-    return_pose:
-      x: -0.027
-      y: 0.006
-      yaw: 0.011
+    drop_pose:  {x: 1.928, y:  0.483, yaw: -1.449}
+  "3":
+    drop_pose:  {x: 2.065, y: -0.425, yaw:  1.640}
 
-default_home:
-  x: -0.027
-  y: 0.006
-  yaw: 0.011
+home: {x: 0.024, y: -0.009, yaw: -0.005}
 
 unload:
-  servo_pwm_open: 1000.0
-  servo_pwm_close: 1500.0
-  servo_hold_time: 3.0
+  pwm_open:  1000.0
+  pwm_close: 1500.0
+  hold_sec:  3.0
+
+topics:
+  dest:     "/unload/destination"             # std_msgs/Int32
+  status:   "/unload/status"                  # std_msgs/String
+  dump_pwm: "/turtlebot3_dumpbox/servo/pwm"   # std_msgs/Float32
+  returned: "/unload/returned"                # std_msgs/Empty
