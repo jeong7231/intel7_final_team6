@@ -6,208 +6,414 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>1100</width>
+    <height>700</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="mainLayout" stretch="0,1">
+   <layout class="QVBoxLayout" name="centralLayout">
+    <property name="spacing">
+     <number>6</number>
+    </property>
+    <property name="leftMargin">
+     <number>9</number>
+    </property>
+    <property name="topMargin">
+     <number>9</number>
+    </property>
+    <property name="rightMargin">
+     <number>9</number>
+    </property>
+    <property name="bottomMargin">
+     <number>9</number>
+    </property>
     <item>
-     <widget class="QWidget" name="leftPanel">
-      <layout class="QVBoxLayout" name="leftLayout" stretch="0,1">
-       <item>
-        <widget class="QPushButton" name="publishButton">
-         <property name="text">
-          <string>서보 토글 명령 전송</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="tcpGroupBox">
-         <property name="title">
-          <string>TCP/IP 클라이언트</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,1">
+     <widget class="QStackedWidget" name="stackedWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="connectPage">
+       <layout class="QVBoxLayout" name="connectPageLayout">
+        <property name="spacing">
+         <number>12</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>20</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>20</number>
+        </property>
+        <item>
+         <spacer name="connectPageTopSpacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Policy::Expanding</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item alignment="Qt::AlignmentFlag::AlignHCenter">
+         <widget class="QLabel" name="connectPageTitleLabel">
+          <property name="font">
+           <font>
+            <pointsize>20</pointsize>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string notr="true">Box Box</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item alignment="Qt::AlignmentFlag::AlignHCenter">
+         <widget class="QGroupBox" name="connectPageGroupBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="title">
+           <string>TCP/IP 서버 설정</string>
+          </property>
+          <layout class="QVBoxLayout" name="connectPageGroupBoxLayout">
+           <property name="spacing">
+            <number>12</number>
+           </property>
+           <property name="leftMargin">
+            <number>16</number>
+           </property>
+           <property name="topMargin">
+            <number>16</number>
+           </property>
+           <property name="rightMargin">
+            <number>16</number>
+           </property>
+           <property name="bottomMargin">
+            <number>16</number>
+           </property>
+           <item>
+            <layout class="QFormLayout" name="connectPageFormLayout">
+             <property name="horizontalSpacing">
+              <number>12</number>
+             </property>
+             <property name="verticalSpacing">
+              <number>8</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="connectServerLabel">
+               <property name="text">
+                <string>서버</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="connectServerLineEdit">
+               <property name="text">
+                <string>192.168.0.4</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="connectPortLabel">
+               <property name="text">
+                <string>포트</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="connectPortLineEdit">
+               <property name="text">
+                <string>9190</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="connectPageButtonLayout">
+             <item>
+              <widget class="QPushButton" name="connectPageConnectButton">
+               <property name="text">
+                <string>서버 시작</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="connectPageButtonSpacer">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Policy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>16</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QLabel" name="connectPageStatusLabel">
+               <property name="text">
+                <string>연결되지 않음</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <spacer name="connectPageBottomSpacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Policy::Expanding</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="mainPage">
+       <layout class="QHBoxLayout" name="mainPageLayout">
+        <item>
+         <layout class="QVBoxLayout" name="leftLayout">
           <item>
-           <layout class="QFormLayout" name="formLayout">
-            <property name="labelAlignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <widget class="QGroupBox" name="connectionGroupBox">
+            <property name="title">
+             <string>TCP/IP 제어</string>
             </property>
-            <item row="0" column="0">
-             <widget class="QLabel" name="serverLabel">
-              <property name="text">
-               <string>서버</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLineEdit" name="serverLineEdit">
-              <property name="text">
-               <string>10.10.16.209</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="portLabel">
-              <property name="text">
-               <string>포트</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLineEdit" name="portLineEdit">
-              <property name="text">
-               <string>9190</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="idLabel">
-              <property name="text">
-               <string>ID</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QLineEdit" name="idLineEdit">
-              <property name="text">
-               <string>0</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="passwordLabel">
-              <property name="text">
-               <string>비밀번호</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QLineEdit" name="passwordLineEdit">
-              <property name="echoMode">
-               <enum>QLineEdit::Password</enum>
-              </property>
-              <property name="text">
-               <string>PASSWD</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="targetLabel">
-              <property name="text">
-               <string>대상 ID</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
-             <widget class="QLineEdit" name="targetLineEdit">
-              <property name="text">
-               <string>ALLMSG</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
+            <layout class="QVBoxLayout" name="connectionGroupBoxLayout">
+             <item>
+              <layout class="QFormLayout" name="connectionFormLayout">
+               <item row="0" column="0">
+                <widget class="QLabel" name="serverLabel">
+                 <property name="text">
+                  <string>서버</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="serverLineEdit">
+                 <property name="text">
+                  <string>10.10.16.44</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="portLabel">
+                 <property name="text">
+                  <string>포트</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="portLineEdit">
+                 <property name="text">
+                  <string>9190</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="connectionButtonLayout">
+               <item>
+                <widget class="QPushButton" name="connectButton">
+                 <property name="text">
+                  <string>서버 시작</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="connectionButtonSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QLabel" name="statusLabel">
+                 <property name="text">
+                  <string>연결되지 않음</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="messageLayout">
+               <item>
+                <widget class="QLineEdit" name="messageLineEdit">
+                 <property name="placeholderText">
+                  <string>보낼 메시지를 입력하세요</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="sendButton">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="text">
+                  <string>메시지 전송</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <item>
-             <widget class="QPushButton" name="connectButton">
-              <property name="text">
-               <string>서버 연결</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QLabel" name="statusLabel">
-              <property name="text">
-               <string>연결되지 않음</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
+           <widget class="QGroupBox" name="imageGroupBox">
+            <property name="title">
+             <string>이미지</string>
+            </property>
+            <layout class="QVBoxLayout" name="imageGroupLayout">
+             <item>
+              <widget class="QLabel" name="imageLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="frameShape">
+                <enum>QFrame::Shape::StyledPanel</enum>
+               </property>
+               <property name="text">
+                <string>이미지가 없습니다.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <item>
-             <widget class="QLineEdit" name="messageLineEdit">
-              <property name="placeholderText">
-               <string>보낼 메시지를 입력하세요</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="sendButton">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="text">
-               <string>메시지 전송</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
+           <widget class="QGroupBox" name="logGroupBox">
+            <property name="title">
+             <string>로그</string>
+            </property>
+            <layout class="QVBoxLayout" name="logGroupLayout">
+             <item>
+              <widget class="QPlainTextEdit" name="logTextEdit">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="publishButton">
+               <property name="text">
+                <string>비상정지</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="rightPanelLayout">
+          <item>
+           <widget class="QTabWidget" name="dataTabWidget">
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+            <widget class="QWidget" name="tab1">
+             <attribute name="title">
+              <string>서울</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="tab1Layout">
+              <item>
+               <widget class="QTableView" name="tab1TableView"/>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="tab2">
+             <attribute name="title">
+              <string>부산</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="tab2Layout">
+              <item>
+               <widget class="QTableView" name="tab2TableView"/>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="tab3">
+             <attribute name="title">
+              <string>대전</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="tab3Layout">
+              <item>
+               <widget class="QTableView" name="tab3TableView"/>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="tab4">
+             <attribute name="title">
+              <string>미분류</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="tab4Layout">
+              <item>
+               <widget class="QTableView" name="tab4TableView"/>
+              </item>
+             </layout>
+            </widget>
+           </widget>
           </item>
           <item>
-           <widget class="QPlainTextEdit" name="logTextEdit">
-            <property name="readOnly">
-             <bool>true</bool>
+           <widget class="QLabel" name="zoneCountLabel">
+            <property name="text">
+             <string>STM 존 전송 횟수: 서울 0회 / 대전 0회 / 부산 0회</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignLeading</set>
             </property>
            </widget>
           </item>
          </layout>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
-     <widget class="QTabWidget" name="dataTabWidget">
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <widget class="QWidget" name="tab1">
-       <attribute name="title">
-        <string>Tab1</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="tab1Layout">
-        <item>
-         <widget class="QTableView" name="tab1TableView"/>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab2">
-       <attribute name="title">
-        <string>Tab2</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="tab2Layout">
-        <item>
-         <widget class="QTableView" name="tab2TableView"/>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab3">
-       <attribute name="title">
-        <string>Tab3</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="tab3Layout">
-        <item>
-         <widget class="QTableView" name="tab3TableView"/>
         </item>
        </layout>
       </widget>
@@ -220,7 +426,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>1100</width>
      <height>22</height>
     </rect>
    </property>
