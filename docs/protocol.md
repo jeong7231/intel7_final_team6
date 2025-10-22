@@ -24,11 +24,9 @@
 - jetson|capture|t
 
 ### → Qt
-E-Stop(물리) 버튼을 눌렀을 경우
-- qt|es|t
 
-택배 무게측정한 값 전송
-- qt|weight|[value]
+컨베이어 벨트에 두 번째 브레이크 빔 인식
+- qt|ir2|t
 
 ### ← Qt
 E-Stop(GUI) 버튼을 눌렀을 경우
@@ -98,8 +96,8 @@ E-Stop(GUI) 재개
 - stm|tur|f
 
 ### ← STM32
-E-Stop(물리) 버튼을 눌렀을 경우
-- qt|es|t
+컨베이어 벨트에 두 번째 브레이크 빔 인식
+- qt|ir2|t
 
 ### → ROS
 E-Stop 눌렀을 경우
