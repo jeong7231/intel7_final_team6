@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(BoxBoxApplication LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Network)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Network Sql)
 
 # When Qt Creator is launched without sourcing the ROS 2 setup script, CMAKE_PREFIX_PATH
 # may not include the default ROS 2 install roots. Add common locations so rclcpp can be found.
@@ -57,6 +57,10 @@ qt_add_executable(BoxBoxApplication
     WIN32 MACOSX_BUNDLE
     main.cpp
     mainwindow.cpp
+    mainwindow_network.cpp
+    mainwindow_image.cpp
+    mainwindow_database.cpp
+    mainwindow_utils.cpp
     mainwindow.h
     mainwindow.ui
 )
@@ -66,6 +70,7 @@ target_link_libraries(BoxBoxApplication
         Qt::Core
         Qt::Widgets
         Qt::Network
+        Qt::Sql
         rclcpp::rclcpp
         ${std_msgs_LIBRARIES}
 )
