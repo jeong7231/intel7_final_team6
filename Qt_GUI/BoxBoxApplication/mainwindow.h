@@ -116,6 +116,7 @@ private:
     void setupTableInteractions();
     void handleTableActivation(const QModelIndex &index);
     void openImageFromPath(const QString &imagePath);
+    void applyModernStyle();
 
     // ✅ 비상정지 상태 UI 반영
     void setEmergencyUiState(bool active);

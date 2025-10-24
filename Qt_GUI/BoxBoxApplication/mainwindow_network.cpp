@@ -642,6 +642,26 @@ void MainWindow::handleQtDelimitedMessage(const QStringList &tokens,
             workingTokens[1] = zoneTokenRaw;
             zoneLiteral = zoneTokenRaw;
         }
+
+        QString broadcastZone = zoneTokenStripped;
+        if (!broadcastZone.isEmpty()) {
+            const int commaIndex = broadcastZone.indexOf(QLatin1Char(','));
+            if (commaIndex >= 0) {
+                broadcastZone = broadcastZone.left(commaIndex);
+            }
+            broadcastZone = broadcastZone.trimmed();
+        }
+        if (broadcastZone.isEmpty() && zoneHint >= 0) {
+            broadcastZone = QString::number(zoneHint);
+        }
+        if (!broadcastZone.isEmpty()) {
+            bool ok = false;
+            int broadcastZoneNumeric = broadcastZone.toInt(&ok);
+            if (!ok) {
+                broadcastZoneNumeric = zoneHint;
+            }
+            broadcastDestinationZone(broadcastZone, broadcastZoneNumeric);
+        }
     }
     if (primary == QStringLiteral("ir2")) {
         QString state_token = workingTokens.size() > 1 ? workingTokens.at(1).trimmed().toLower()
@@ -1079,18 +1099,18 @@ void MainWindow::broadcastDestinationZone(const QString &zone_text, int zone_num
     int finalZone = -1;
 
     // (A) det 파싱에서 넘어온 숫자 힌트가 가장 정확하므로 최우선 사용
-    if (zone_numeric > 0) {
+    if (zone_numeric >= 0) {
         finalZone = zone_numeric;
     } else {
         // (B) zone_text가 숫자면 그대로, 아니면 지역명 매핑
         const int fromText = toZoneNumber(zone_text);
-        if (fromText > 0) {
+        if (fromText >= 0) {
             finalZone = fromText;
         }
     }
 
-    // 유효성 체크: 1,2,3만 허용(필요 시 0/기타 처리 규칙에 맞춰 조정)
-    if (finalZone <= 0) {
+    // 유효성 체크: 음수는 허용하지 않음
+    if (finalZone < 0) {
         appendLog(tr("STM 존 정보 전송 실패: 유효한 존이 없습니다. (text=%1, hint=%2)")
                       .arg(zone_text)
                       .arg(zone_numeric));

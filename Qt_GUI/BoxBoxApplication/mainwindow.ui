@@ -15,21 +15,21 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="centralLayout">
-    <property name="spacing">
-     <number>6</number>
-    </property>
-    <property name="leftMargin">
-     <number>9</number>
-    </property>
-    <property name="topMargin">
-     <number>9</number>
-    </property>
-    <property name="rightMargin">
-     <number>9</number>
-    </property>
-    <property name="bottomMargin">
-     <number>9</number>
-    </property>
+   <property name="spacing">
+    <number>16</number>
+   </property>
+   <property name="leftMargin">
+    <number>24</number>
+   </property>
+   <property name="topMargin">
+    <number>24</number>
+   </property>
+   <property name="rightMargin">
+    <number>24</number>
+   </property>
+   <property name="bottomMargin">
+    <number>24</number>
+   </property>
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
@@ -37,21 +37,21 @@
       </property>
       <widget class="QWidget" name="connectPage">
        <layout class="QVBoxLayout" name="connectPageLayout">
-        <property name="spacing">
-         <number>12</number>
-        </property>
-        <property name="leftMargin">
+       <property name="spacing">
+         <number>24</number>
+       </property>
+       <property name="leftMargin">
          <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>20</number>
-        </property>
-        <property name="rightMargin">
+       </property>
+       <property name="topMargin">
+         <number>32</number>
+       </property>
+       <property name="rightMargin">
          <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>20</number>
-        </property>
+       </property>
+       <property name="bottomMargin">
+         <number>32</number>
+       </property>
         <item>
          <spacer name="connectPageTopSpacer">
           <property name="orientation">
@@ -77,7 +77,17 @@
            </font>
           </property>
           <property name="text">
-           <string notr="true">Box Box</string>
+           <string notr="true">BoxBox Control Center</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+        </widget>
+       </item>
+        <item alignment="Qt::AlignmentFlag::AlignHCenter">
+         <widget class="QLabel" name="connectPageSubtitleLabel">
+          <property name="text">
+           <string>연결 정보를 확인하고 서버를 시작하세요.</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -97,7 +107,7 @@
           </property>
           <layout class="QVBoxLayout" name="connectPageGroupBoxLayout">
            <property name="spacing">
-            <number>12</number>
+            <number>18</number>
            </property>
            <property name="leftMargin">
             <number>16</number>
@@ -211,7 +221,7 @@
           <item>
            <widget class="QGroupBox" name="connectionGroupBox">
             <property name="title">
-             <string>TCP/IP 제어</string>
+             <string>실시간 제어</string>
             </property>
             <layout class="QVBoxLayout" name="connectionGroupBoxLayout">
              <item>
@@ -302,10 +312,10 @@
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="imageGroupBox">
-            <property name="title">
-             <string>이미지</string>
-            </property>
+          <widget class="QGroupBox" name="imageGroupBox">
+           <property name="title">
+            <string>실시간 이미지</string>
+           </property>
             <layout class="QVBoxLayout" name="imageGroupLayout">
              <item>
               <widget class="QLabel" name="imageLabel">
@@ -330,10 +340,10 @@
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="logGroupBox">
-            <property name="title">
-             <string>로그</string>
-            </property>
+          <widget class="QGroupBox" name="logGroupBox">
+           <property name="title">
+            <string>시스템 로그</string>
+           </property>
             <layout class="QVBoxLayout" name="logGroupLayout">
              <item>
               <widget class="QPlainTextEdit" name="logTextEdit">
@@ -404,10 +414,10 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="zoneCountLabel">
-            <property name="text">
-             <string>STM 존 전송 횟수: 서울 0회 / 대전 0회 / 부산 0회</string>
-            </property>
+          <widget class="QLabel" name="zoneCountLabel">
+           <property name="text">
+             <string>IR2 대기 없음</string>
+           </property>
             <property name="alignment">
              <set>Qt::AlignmentFlag::AlignLeading</set>
             </property>

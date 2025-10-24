@@ -18,6 +18,7 @@
 #include <QPixmap>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QFont>
 #include <QResizeEvent>
 #include <QSqlDatabase>
 #include <QSqlError>
@@ -34,6 +35,9 @@
 #include <QBoxLayout>
 #include <QHBoxLayout>
 #include <QSizePolicy>
+#include <QTabWidget>
+#include <QTabBar>
+#include <QStyle>
 #include <algorithm>
 #include <exception>
 
@@ -62,17 +66,18 @@ MainWindow::MainWindow(QWidget *parent)
 
     // ✅ 버튼 교체: publishButton → 비상정지 토글 버튼으로 사용
     stop_button_ = ui->publishButton;            // UI에서 기존 버튼 재활용
+    if (stop_button_) {
+        stop_button_->setText(tr("비상정지"));
+        stop_button_->setProperty("accentButton", true);
+    }
+
+    applyModernStyle();
 
     server_ = new QTcpServer(this);
     stacked_widget_ = ui->stackedWidget;
     connect_page_ = ui->connectPage;
     main_page_ = ui->mainPage;
     image_label_ = ui->imageLabel;
-
-    if (stop_button_) {
-        stop_button_->setText(tr("비상정지"));
-        stop_button_->setStyleSheet(QStringLiteral("QPushButton { background-color: #FF7043; color: #ffffff; }"));
-    }
     if (image_label_) {
         image_label_->setAlignment(Qt::AlignCenter);
         image_label_->setText(tr("이미지가 없습니다."));
@@ -280,6 +285,139 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::applyModernStyle()
+{
+    if (!ui) {
+        return;
+    }
+
+    setAttribute(Qt::WA_StyledBackground, true);
+    if (QWidget *center = centralWidget()) {
+        center->setAttribute(Qt::WA_StyledBackground, true);
+    }
+
+    QFont baseFont = font();
+    const int desiredPointSize = baseFont.pointSize() > 0 ? baseFont.pointSize() : 10;
+    baseFont.setPointSize(std::max(desiredPointSize, 11));
+    setFont(baseFont);
+
+    if (ui->centralLayout) {
+        ui->centralLayout->setContentsMargins(32, 24, 32, 24);
+        ui->centralLayout->setSpacing(24);
+    }
+    if (ui->connectPageLayout) {
+        ui->connectPageLayout->setContentsMargins(0, 32, 0, 32);
+        ui->connectPageLayout->setSpacing(24);
+    }
+    if (ui->connectPageGroupBoxLayout) {
+        ui->connectPageGroupBoxLayout->setSpacing(18);
+    }
+    if (ui->mainPageLayout) {
+        ui->mainPageLayout->setSpacing(24);
+    }
+    if (ui->leftLayout) {
+        ui->leftLayout->setSpacing(16);
+    }
+    if (ui->rightPanelLayout) {
+        ui->rightPanelLayout->setSpacing(16);
+    }
+
+    const auto markStatusLabel = [](QLabel *label) {
+        if (!label) {
+            return;
+        }
+        label->setProperty("stateLabel", true);
+    };
+    markStatusLabel(ui->statusLabel);
+    markStatusLabel(ui->connectPageStatusLabel);
+    if (ui->zoneCountLabel) {
+        ui->zoneCountLabel->setWordWrap(true);
+        ui->zoneCountLabel->setProperty("stateLabel", true);
+    }
+    if (ui->connectPageSubtitleLabel) {
+        ui->connectPageSubtitleLabel->setProperty("subtitleLabel", true);
+    }
+
+    if (stop_button_) {
+        stop_button_->setProperty("accentButton", true);
+        stop_button_->setProperty("stopState", QStringLiteral("stop"));
+        stop_button_->setMinimumHeight(42);
+        stop_button_->setCursor(Qt::PointingHandCursor);
+    }
+
+    const QString stylesheet = QStringLiteral(
+        "QMainWindow { background-color: #f5f7fa; }\n"
+        "QWidget#centralwidget { background-color: transparent; }\n"
+        "QGroupBox { background-color: #ffffff; border: 1px solid #dcdfe6; border-radius: 12px; margin-top: 18px; }\n"
+        "QGroupBox::title { subcontrol-origin: margin; left: 18px; padding: 0 6px; font-weight: 600; color: #1f2d3d; }\n"
+        "QPushButton { background-color: #2d8cf0; border: none; border-radius: 8px; color: #ffffff; padding: 9px 18px; font-weight: 600; }\n"
+        "QPushButton:hover { background-color: #1a73e8; }\n"
+        "QPushButton:pressed { background-color: #1765c0; }\n"
+        "QPushButton:disabled { background-color: #d3dce6; color: #8a97a6; }\n"
+        "QPushButton[accentButton=\"true\"] { background-color: #ff5b5b; }\n"
+        "QPushButton[accentButton=\"true\"]:hover { background-color: #ff4343; }\n"
+        "QPushButton[accentButton=\"true\"]:pressed { background-color: #e62e2e; }\n"
+        "QPushButton[accentButton=\"true\"][stopState=\"resume\"] { background-color: #34c759; }\n"
+        "QPushButton[accentButton=\"true\"][stopState=\"resume\"]:hover { background-color: #2dab4f; }\n"
+        "QPushButton[accentButton=\"true\"][stopState=\"resume\"]:pressed { background-color: #20863c; }\n"
+        "QLineEdit, QPlainTextEdit { border: 1px solid #dcdfe6; border-radius: 8px; padding: 8px 10px; background-color: #ffffff; }\n"
+        "QLineEdit:focus, QPlainTextEdit:focus { border-color: #2d8cf0; }\n"
+        "QPlainTextEdit { min-height: 180px; }\n"
+        "QTabWidget::pane { border: 1px solid #dcdfe6; border-radius: 12px; background: #ffffff; margin-top: 12px; }\n"
+        "QTabBar::tab { background: transparent; border: none; padding: 8px 20px; margin: 0 4px; border-radius: 20px; color: #5c677d; font-weight: 600; }\n"
+        "QTabBar::tab:selected { background: #2d8cf0; color: #ffffff; }\n"
+        "QTableView { background: #ffffff; border: none; gridline-color: #e0e6ed; selection-background-color: rgba(45, 140, 240, 80); selection-color: #1f2d3d; }\n"
+        "QHeaderView::section { background: #f0f2f5; border: none; padding: 6px 8px; font-weight: 600; color: #475b77; }\n"
+        "QLabel[stateLabel=\"true\"] { padding: 4px 14px; border-radius: 14px; background-color: #e6f1ff; color: #1a73e8; font-weight: 600; }\n"
+        "QLabel[subtitleLabel=\"true\"] { color: #5c677d; }\n"
+        "QStatusBar { background: #ffffff; border-top: 1px solid #dcdfe6; }\n"
+        "QScrollBar:vertical { background: transparent; width: 12px; margin: 4px 0; }\n"
+        "QScrollBar::handle:vertical { background: #c0c6d1; border-radius: 6px; min-height: 30px; }\n"
+        "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }\n"
+        "QScrollBar:horizontal { background: transparent; height: 12px; margin: 0 4px; }\n"
+        "QScrollBar::handle:horizontal { background: #c0c6d1; border-radius: 6px; min-width: 30px; }\n"
+        "QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal { background: transparent; }\n"
+        "QLabel#imageLabel { background: #fafbfc; border: 2px dashed #dcdfe6; border-radius: 12px; color: #8a97a6; }\n"
+    );
+    setStyleSheet(stylesheet);
+
+    if (ui->connectPageTitleLabel) {
+        QFont titleFont = baseFont;
+        titleFont.setPointSize(baseFont.pointSize() + 8);
+        titleFont.setBold(true);
+        ui->connectPageTitleLabel->setFont(titleFont);
+        ui->connectPageTitleLabel->setAlignment(Qt::AlignCenter);
+        ui->connectPageTitleLabel->setText(tr("BoxBox Control Center"));
+    }
+    if (ui->connectPageSubtitleLabel) {
+        QFont subtitleFont = baseFont;
+        subtitleFont.setPointSize(baseFont.pointSize() + 1);
+        ui->connectPageSubtitleLabel->setFont(subtitleFont);
+    }
+
+    if (ui->dataTabWidget) {
+        ui->dataTabWidget->setDocumentMode(true);
+        ui->dataTabWidget->setElideMode(Qt::ElideRight);
+        if (QTabBar *bar = ui->dataTabWidget->tabBar()) {
+            bar->setExpanding(false);
+        }
+    }
+
+    if (ui->logTextEdit) {
+        ui->logTextEdit->setPlaceholderText(tr("시스템 로그가 이곳에 표시됩니다."));
+    }
+
+    if (ui->messageLineEdit) {
+        ui->messageLineEdit->setPlaceholderText(tr("보낼 메시지를 입력하세요"));
+    }
+
+    if (ui->imageLabel) {
+        ui->imageLabel->setMinimumSize(380, 260);
+        ui->imageLabel->setAlignment(Qt::AlignCenter);
+        ui->imageLabel->setWordWrap(true);
+    }
+}
+
 // ====================== ✅ 비상정지/재개 구현 ======================
 
 void MainWindow::onEmergencyToggleClicked()
@@ -330,14 +468,12 @@ void MainWindow::setEmergencyUiState(bool active)
     emergency_active_ = active;
 
     if (stop_button_) {
-        if (active) {
-            stop_button_->setText(tr("정지 해제"));
-            stop_button_->setStyleSheet(QStringLiteral("QPushButton { background-color: #66BB6A; color: #ffffff; }"));
-        } else {
-            stop_button_->setText(tr("비상정지"));
-            stop_button_->setStyleSheet(QStringLiteral("QPushButton { background-color: #FF7043; color: #ffffff; }"));
-        }
+        stop_button_->setText(active ? tr("정지 해제") : tr("비상정지"));
+        stop_button_->setProperty("stopState", active ? QStringLiteral("resume") : QStringLiteral("stop"));
         stop_button_->setEnabled(true);
+        stop_button_->style()->unpolish(stop_button_);
+        stop_button_->style()->polish(stop_button_);
+        stop_button_->update();
     }
 
     if (changed) {
